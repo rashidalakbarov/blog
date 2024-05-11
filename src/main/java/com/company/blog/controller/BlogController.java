@@ -42,25 +42,13 @@ public class BlogController {
 
     @GetMapping("/blog/{id}")
     public String blogDetails(@PathVariable(value = "id") long id, Model model) {
-        if (!postRepository.existsById(id)) {
-            return "redirect:/blog";
-        }
-        Optional<Post> post = postRepository.findById(id);
-        ArrayList<Post> res = new ArrayList<>();
-        post.ifPresent(res::add);
-        model.addAttribute("post", res);
+        if (notFoundPost(id, model)) return "redirect:/blog";
         return "blog-details";
     }
 
     @GetMapping("/blog/{id}/edit")
     public String blogEdit(@PathVariable(value = "id") long id, Model model) {
-        if (!postRepository.existsById(id)) {
-            return "redirect:/blog";
-        }
-        Optional<Post> post = postRepository.findById(id);
-        ArrayList<Post> res = new ArrayList<>();
-        post.ifPresent(res::add);
-        model.addAttribute("post", res);
+        if (notFoundPost(id, model)) return "redirect:/blog";
         return "blog-edit";
     }
 
@@ -85,4 +73,20 @@ public class BlogController {
         postRepository.delete(post);
         return "redirect:/blog";
     }
+
+
+    public boolean notFoundPost(@PathVariable("id") long id,
+                                Model model) {
+
+        if (!postRepository.existsById(id)) {
+            return true;
+        }
+
+        Optional<Post> post = postRepository.findById(id);
+        ArrayList<Post> res = new ArrayList<>();
+        post.ifPresent(res::add);
+        model.addAttribute("post", res);
+        return false;
+    }
+
 }
