@@ -1,8 +1,6 @@
 package com.company.blog.controller;
 
-import com.company.blog.models.Post;
-import com.company.blog.repository.PostRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.company.blog.service.PostService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,45 +8,45 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.ArrayList;
-import java.util.Optional;
-
 @Controller
 public class BlogController {
 
-    @Autowired
-    private PostRepository postRepository;
+
+    private final PostService postService;
+
+    public BlogController(PostService postService) {
+        this.postService = postService;
+    }
 
     @GetMapping("/blog")
     public String blogMain(Model model) {
-        Iterable<Post> posts = postRepository.findAll();
-        model.addAttribute("posts", posts);
+        postService.findAll(model);
         return "blog-main";
     }
 
     @GetMapping("/blog/add")
-    public String blogAdd(Model model) {
+    public String blogAdd() {
         return "blog-add";
     }
 
     @PostMapping("/blog/add")
     public String blogPostAdd(@RequestParam String title,
                               @RequestParam String anons,
-                              @RequestParam String full_text, Model model) {
-        Post post = new Post(title, anons, full_text);
-        postRepository.save(post);
+                              @RequestParam String full_text) {
+
+        postService.save(title, anons, full_text);
         return "redirect:/blog";
     }
 
     @GetMapping("/blog/{id}")
     public String blogDetails(@PathVariable(value = "id") long id, Model model) {
-        if (notFoundPost(id, model)) return "redirect:/blog";
+        if (postService.notFoundPost(id, model)) return "redirect:/blog";
         return "blog-details";
     }
 
     @GetMapping("/blog/{id}/edit")
     public String blogEdit(@PathVariable(value = "id") long id, Model model) {
-        if (notFoundPost(id, model)) return "redirect:/blog";
+        if (postService.notFoundPost(id, model)) return "redirect:/blog";
         return "blog-edit";
     }
 
@@ -56,37 +54,17 @@ public class BlogController {
     public String blogPostUpdate(@PathVariable(value = "id") long id,
                                  @RequestParam String title,
                                  @RequestParam String anons,
-                                 @RequestParam String full_text, Model model) {
+                                 @RequestParam String full_text) {
 
-        Post post = postRepository.findById(id).orElseThrow();
-        post.setTitle(title);
-        post.setAnons(anons);
-        post.setFull_text(full_text);
-        postRepository.save(post);
+        postService.updatePost(id, title, anons, full_text);
         return "redirect:/blog";
     }
 
     @PostMapping("/blog/{id}/remove")
     public String blogPostDelete(@PathVariable(value = "id") long id, Model model) {
+        postService.deletePost(id);
 
-        Post post = postRepository.findById(id).orElseThrow();
-        postRepository.delete(post);
         return "redirect:/blog";
-    }
-
-
-    public boolean notFoundPost(@PathVariable("id") long id,
-                                Model model) {
-
-        if (!postRepository.existsById(id)) {
-            return true;
-        }
-
-        Optional<Post> post = postRepository.findById(id);
-        ArrayList<Post> res = new ArrayList<>();
-        post.ifPresent(res::add);
-        model.addAttribute("post", res);
-        return false;
     }
 
 }
