@@ -40,7 +40,9 @@ public class BlogController {
 
     @GetMapping("/blog/{id}")
     public String blogDetails(@PathVariable(value = "id") long id, Model model) {
-        if (postService.notFoundPost(id, model)) return "redirect:/blog";
+        if (postService.notFoundPost(id, model)) {
+            return "redirect:/blog";
+        }
         return "blog-details";
     }
 
